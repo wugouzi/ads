@@ -1,7 +1,7 @@
 ;#!/usr/bin/racket
 ;#lang racket
 
-;;tree:: (key left-subtree right-subtree parent height)
+;;tree:: (key left-subtree right-subtree height)
 (require racket/trace)
 (require racket/string)
 
