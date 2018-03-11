@@ -1,15 +1,14 @@
-#!/usr/bin/racket
-#lang racket
+;#!/usr/bin/racket
+;#lang racket
 
 ;;tree:: (key left-subtree right-subtree parent height)
-;;(require racket/trace)
+(require racket/trace)
 (require racket/string)
 
 (define n (read-line))
 (define l (read-line))
 
-(define tr
-  (map string->number (string-split l)))
+;(define tr (map string->number (string-split l)))
 
 (define nil '())
 
@@ -105,12 +104,51 @@
                (avl-balance newtree))))
         (else tree)))
 
-(define (delete tree key)
-  ())
+(define (delete-left-most tree)
+  (cond ((null? (left tree))
+         (right tree))
+        (else
+         (make-avl-tree (key tree)
+                        (delete-left-most (left tree))
+                        (right tree)))))
+
+(define (left-most tree)
+  (if (null? (left tree))
+      tree
+      (left-most (left tree))))
+
+(define (delete tree delete-key)
+  
+  
+  (let ((tree-key (key tree)))
+   (cond ((null? tree) tree)
+         ((< delete-key tree-key)
+          (if (null? (left tree))
+              tree
+              (let ((newtree (make-avl-tree tree-key
+                                            (delete (left tree) delete-key)
+                                            (right tree))))
+                (avl-balance newtree))))
+         ((> delete-key tree-key)
+          (if (null? (right tree))
+              tree
+              (let ((newtree (make-avl-tree tree-key
+                                            (left tree)
+                                            (delete (right tree) delete-key))))
+                (avl-balance newtree))))
+         ((= delete-key tree-key)
+          (let ((newtree (cond ((null? (left tree)) (right tree))
+                               ((null? (right tree)) (left tree))
+                               (else (make-avl-tree (key (left-most (right tree)))
+                                                    (left tree)
+                                                    (delete-left-most (right tree)))))))
+            (avl-balance newtree))))))
 
 (define (insert-list tree keys)
   (if (null? keys)
       tree
       (insert-list (insert-avl tree (car keys)) (cdr keys))))
 
-(print (car (insert-list nil tr)))
+;(print (car (insert-list nil tr)))
+
+(define test-tree '(5 (1 () (4 () () 1) 2) (8 (7 () () 1) (23 () () 1) 2) 3))
