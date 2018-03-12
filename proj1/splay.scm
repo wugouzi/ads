@@ -39,60 +39,83 @@
 
 (define test-tree '(5 (1 () (4 () () 1) 2) (8 (7 () () 1) (23 () () 1) 2) 3))
 
-(define (splay tree search-key)
+(define (add-to-right-most tree add-tree)
+  (cond ((null? tree) add-tree)
+        ((null? add-tree) tree)
+        (else (if (null? (right tree))
+                  (list (key tree) (left tree) add-tree)
+                  (list (key tree) (left tree) (add-to-right-most (right tree) add-tree))))))
+
+(define (add-to-left-most tree add-tree)
+  (cond ((null? tree) add-tree)
+        ((null? add-tree) tree)
+        (else (if (null? (left tree))
+                  (list (key tree) add-tree (right tree))
+                  (list (key tree) (add-to-left-most (left tree) add-tree) (right tree))))))
+
+(define (merge-tree main-tree left-tree right-tree)
+  (list (key main-tree)
+        (add-to-right-most left-tree (left main-tree))
+        (add-to-left-most right-tree (right main-tree))))
+
+(define (make-splay-right-tree tree)
+  (list (key tree) nil (right tree)))
+
+(define (make-splay-left-tree tree)
+  (list (key tree) (left tree) nil))
+
+(define (top-down-splay tree search-key left-tree right-tree)
   (let ((tree-key (key tree)))
-   (cond ((or (null? tree)
-              (= search-key tree-key)
-              (and (null? (left tree))
-                   (null? (right tree))))
-          tree)
-         ((and (< search-key tree-key)
-               (not (null? (left tree))))
-          (let ((left-key (key (left tree))))
-            (cond ((< search-key left-key)
-                   (let ((newtree (list tree-key
-                                        (list left-key
-                                              (splay (left (left tree)) search-key)
-                                              (right (left tree)))
-                                        (right tree))))
-                     (if (null? (left (left newtree)))
-                         (right-rotate newtree)
-                         (right-right-rotate newtree))))
-                  ((> search-key left-key)
-                   (let ((newtree (list tree-key
-                                        (list left-key
-                                              (left (left tree))
-                                              (splay (right (left tree)) search-key))
-                                        (right tree))))
-                     (if (null? (right (left newtree)))
-                         (right-rotate newtree)
-                         (left-right-rotate newtree))))
-                  (else
-                   (right-rotate tree)))))
-         ((and (> search-key tree-key)
-               (not (null? (right tree))))
-          (let ((right-key (key (right tree))))
-            (cond ((> search-key right-key)
-                   (let ((newtree (list tree-key
-                                        (left tree)
-                                        (list right-key
-                                              (left (right tree))
-                                              (splay (right (right tree)) search-key)))))
-                     (if (null? (right (right newtree)))
-                         (left-rotate newtree)
-                         (left-left-rotate newtree))))
-                  ((< search-key right-key)
-                   (let ((newtree (list tree-key
-                                        (left tree)
-                                        (list right-key
-                                              (splay (left (right tree)) search-key)
-                                              (right (right tree))))))
-                     (if (null? (left (right newtree)))
-                         (left-rotate newtree)
-                         (right-left-rotate newtree))))
-                  (else
-                   (left-rotate tree)))))
-         (else tree))))
+    (cond ((and (null? (left tree))
+                (null? (right tree))) (merge-tree tree left-tree right-tree))
+          ((= search-key tree-key) (merge-tree tree left-tree right-tree))
+          ((< search-key tree-key)
+           (cond ((null? (left tree))
+                  (merge-tree tree left-tree right-tree))
+                 (else
+                  (let ((left-key (key (left tree))))
+                    (cond ((< search-key left-key)
+                           (let ((newtree (right-rotate tree)))
+                             (top-down-splay (left newtree)
+                                             search-key
+                                             left-tree
+                                             (add-to-left-most right-tree
+                                                               (make-splay-right-tree newtree)))))
+                          ((> search-key left-key)
+                           (top-down-splay (right (left tree))
+                                           search-key
+                                           (add-to-right-most left-tree
+                                                              (make-splay-left-tree (left tree)))
+                                           (add-to-left-most right-tree
+                                                             (make-splay-right-tree tree))))
+                          ((= search-key left-key)
+                           (merge-tree (left tree)
+                                       left-tree
+                                       (add-to-left-most right-tree
+                                                         (make-splay-right-tree tree)))))))))
+          ((> search-key tree-key)
+           (if (null? (right tree))
+               (merge-tree tree left-tree right-tree)
+               (let ((right-key (key (right tree))))
+                 (cond ((> search-key right-key)
+                        (let ((newtree (left-rotate tree)))
+                          (top-down-splay (right newtree)
+                                          search-key
+                                          (add-to-right-most left-tree
+                                                             (make-splay-left-tree newtree))
+                                          right-tree)))
+                       ((< search-key right-key)
+                        (top-down-splay (left (right tree))
+                                        search-key
+                                        (add-to-right-most left-tree
+                                                           (make-splay-left-tree tree))
+                                        (add-to-left-most right-tree
+                                                          (make-splay-right-tree (right tree)))))
+                       ((= search-key right-key)
+                        (merge-tree (right tree)
+                                    (add-to-right-most left-tree
+                                                       (make-splay-left-tree tree))
+                                    right-tree)))))))))
 
 (define (insert-splay tree new-key)
   (define (insert tree new-key)
@@ -114,7 +137,7 @@
                (list (key tree)
                      (left tree)
                      (insert (right tree) new-key))))))
-  (splay (insert tree new-key) new-key))
+  (top-down-splay (insert tree new-key) new-key nil nil))
 
 (define (right-most tree)
   (if (null? (right tree))
@@ -139,4 +162,10 @@
       tree
       (insert-list (insert-splay tree (car keys)) (cdr keys))))
 
+
+
+;(insert-list nil '(3 1 4 7 8 2 5 6 0))
+(define t-tree '(0 () (5 (1 () (2 () (4 (3 () ()) ()))) (6 () (7 () (8 () ()))))))
+;(insert-list nil '(3 1 4 7 8 2 5 6 0 29))
+;'(29 (5 (0 () (1 () (2 () (4 (3 () ()) ())))) (7 (6 () ()) (8 () ()))) ())
 
