@@ -2,13 +2,15 @@
 ;#lang racket
 
 ;;tree:: (key left-subtree right-subtree height)
-(require racket/trace)
-(require racket/string)
-
-(define n (read-line))
-(define l (read-line))
-
+;(require racket/trace)
 ;(define tr (map string->number (string-split l)))
+(define tree-list
+  (call-with-input-file "avl-test.txt"
+    (lambda (in)
+      (let proc ((x (read in)))
+        (if (eof-object? x)
+            '()
+            (cons x (proc (read in))))))))
 
 (define nil '())
 
@@ -104,22 +106,19 @@
                (avl-balance newtree))))
         (else tree)))
 
-(define (delete-left-most tree)
-  (cond ((null? (left tree))
-         (right tree))
-        (else
-         (make-avl-tree (key tree)
-                        (delete-left-most (left tree))
-                        (right tree)))))
-
-(define (left-most tree)
-  (if (null? (left tree))
-      tree
-      (left-most (left tree))))
 
 (define (delete tree delete-key)
-  
-  
+  (define (left-most tree)
+    (if (null? (left tree))
+        tree
+        (left-most (left tree))))
+  (define (delete-left-most tree)
+    (cond ((null? (left tree))
+           (right tree))
+          (else
+           (make-avl-tree (key tree)
+                          (delete-left-most (left tree))
+                          (right tree)))))
   (let ((tree-key (key tree)))
    (cond ((null? tree) tree)
          ((< delete-key tree-key)
@@ -149,6 +148,26 @@
       tree
       (insert-list (insert-avl tree (car keys)) (cdr keys))))
 
+(define (search tree search-key)
+  (cond ((null? tree) tree)
+        ((< search-key (key tree)) (search (left tree) search-key))
+        ((> search-key (key tree)) (search (right tree) search-key))
+        ((= search-key (key tree)) tree)))
 ;(print (car (insert-list nil tr)))
 
 (define test-tree '(5 (1 () (4 () () 1) 2) (8 (7 () () 1) (23 () () 1) 2) 3))
+
+(define (read-tree-list tree-list tree)
+  (cond ((null? tree-list) tree)
+        ((= 0 (car tree-list))
+         (read-tree-list (cddr tree-list)
+                         (insert-avl tree (cadr tree-list))))
+        ((= 1 (car tree-list))
+         (read-tree-list (cddr tree-list)
+                         (delete tree (cadr tree-list))))
+        ((= 2 (car tree-list))
+         (begin
+           (search tree (cadr tree-list))
+           (read-tree-list (cddr tree-list))))))
+
+(print (read-tree-list tree-list nil))
