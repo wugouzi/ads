@@ -40,6 +40,7 @@
   (if (null? tree)
       (make-leaf new-key)
       (let ((tree-key (key tree)))
+        ;;Whether the new-key is in the node, left subtree or right subtree
         (cond ((= tree-key new-key) tree)
               ((< new-key tree-key)
                (list tree-key
@@ -50,12 +51,14 @@
                      (left tree)
                      (insert (right tree) new-key)))))))
 
+;;Find the left-most key of the tree, which is the minimum key
 (define (find-left-most-key tree)
   (cond ((null? tree) nil)
         ((null? (left tree)) (key tree))
         (else
          (find-left-most-key (left tree)))))
 
+;;Delete the left-most node
 (define (delete-left-most tree)
   (cond ((null? tree) tree)
         ((null? (left tree))
@@ -70,14 +73,17 @@
   (if (null? tree)
       tree
       (let ((tree-key (key tree)))
+        ;;The key lies in left subtree
         (cond ((< delete-key tree-key)
                (list tree-key
                      (delete (left tree) delete-key)
                      (right tree)))
+              ;;The key lies in right subtree
               ((> delete-key tree-key)
                (list tree-key
                      (left tree)
                      (delete (right tree) delete-key)))
+              ;;Find the key
               ((= delete-key tree-key)
                (cond ((null? (left tree))
                       (right tree))
@@ -93,6 +99,7 @@
       tree
       (insert-list (insert tree (car keys)) (cdr keys))))
 
+;;Search operation
 (define (search tree search-key)
   (cond ((null? tree) tree)
         ((< search-key (key tree)) (search (left tree) search-key))

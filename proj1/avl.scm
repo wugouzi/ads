@@ -1,9 +1,6 @@
 ;#!/usr/bin/racket
 ;#lang racket
-
 ;;tree:: (key left-subtree right-subtree height)
-;(require racket/trace)
-;(define tr (map string->number (string-split l)))
 (define tree-list
   (call-with-input-file "avl-test.txt"
     (lambda (in)
@@ -14,27 +11,35 @@
 
 (define nil '())
 
+;;Key of the tree
 (define (key tree)
   (car tree))
 
+;;Left subtree
 (define (left tree)
   (cadr tree))
 
+;;Right subtree
 (define (right tree)
   (caddr tree))
 
+;;Height of the tree, we assume leaf has height 1
 (define (height tree)
   (if (null? tree)
       0
       (cadddr tree)))
 
+;;Balance factor of the tree
 (define (factor tree)
   (- (height (left tree))
      (height (right tree))))
 
+;;Make a leaf
 (define (make-leaf key)
   (list key nil nil 1))
 
+
+;;Make an avl-tree
 (define (make-avl-tree key left right)
   (list key left right
         (+ 1 (max (height left)
@@ -76,17 +81,26 @@
                                     (right (right (left tree)))
                                     (right tree)))))
 
+;;Balance the tree
 (define (avl-balance tree)
   (let ((avl-factor (factor tree)))
-    (cond ((= 2 avl-factor)
-           (if (> 0 (factor (left tree)))
-               (left-right-rotate tree)
-               (right-rotate tree)))
-          ((= -2 avl-factor)
-           (if (> (factor (right tree)) 0)
-               (right-left-rotate tree)
-               (left-rotate tree)))
-          (else tree))))
+    (cond
+     ;;The balance factor is 2
+     ((= 2 avl-factor)
+      (if (> 0 (factor (left tree)))
+          ;;Left right case since the bf of
+          ;;the left tree is larger than 1
+          (left-right-rotate tree)
+          ;;Left left case
+          (right-rotate tree)))
+     ((= -2 avl-factor)
+      (if (> (factor (right tree)) 0)
+          ;;Right left case
+          (right-left-rotate tree)
+          ;;Right right case
+          (left-rotate tree)))
+     ;;The tree doesn't need balance
+     (else tree))))
 
 (define (insert-avl tree new-key)
   (cond ((null? tree) (make-leaf new-key))
@@ -108,10 +122,13 @@
 
 
 (define (delete tree delete-key)
+  ;;Find the left-most node of the tree
+  ;;which is the inorder successor of the delete-key
   (define (left-most tree)
     (if (null? (left tree))
         tree
         (left-most (left tree))))
+  ;;Delete the left-most nodes of the tree
   (define (delete-left-most tree)
     (cond ((null? (left tree))
            (right tree))
@@ -120,29 +137,42 @@
                           (delete-left-most (left tree))
                           (right tree)))))
   (let ((tree-key (key tree)))
-   (cond ((null? tree) tree)
-         ((< delete-key tree-key)
-          (if (null? (left tree))
-              tree
-              (let ((newtree (make-avl-tree tree-key
-                                            (delete (left tree) delete-key)
-                                            (right tree))))
-                (avl-balance newtree))))
-         ((> delete-key tree-key)
-          (if (null? (right tree))
-              tree
-              (let ((newtree (make-avl-tree tree-key
-                                            (left tree)
-                                            (delete (right tree) delete-key))))
-                (avl-balance newtree))))
-         ((= delete-key tree-key)
-          (let ((newtree (cond ((null? (left tree)) (right tree))
-                               ((null? (right tree)) (left tree))
-                               (else (make-avl-tree (key (left-most (right tree)))
-                                                    (left tree)
-                                                    (delete-left-most (right tree)))))))
-            (avl-balance newtree))))))
+    (cond
+     ;;No such key
+     ((null? tree) tree)
+     ;;The key is in left subtree
+p     ((< delete-key tree-key)
+      (if (null? (left tree))
+          tree
+          (let ((newtree (make-avl-tree tree-key
+                                        (delete (left tree) delete-key)
+                                        (right tree))))
+            ;;Balance the tree. Since we use a recursive way to delete
+            ;;tree, thus we only balance one node in practice.
+            (avl-balance newtree))))
+     ;;The key is in right subtree
+     ((> delete-key tree-key)
+      (if (null? (right tree))
+          tree
+          (let ((newtree (make-avl-tree tree-key
+                                        (left tree)
+                                        (delete (right tree) delete-key))))
+            (avl-balance newtree))))
+     ;;Find the key
+     ((= delete-key tree-key)
+      (let
+          ;;Make the newtree
+          ((newtree (cond ((null? (left tree)) (right tree))
+                          ((null? (right tree)) (left tree))
+                          ;;The nodes have both right subtree and left subtree
+                          ;;So we need to find its inorder successor and take
+                          ;;the place of it
+                          (else (make-avl-tree (key (left-most (right tree)))
+                                               (left tree)
+                                               (delete-left-most (right tree)))))))
+        (avl-balance newtree))))))
 
+;;Insert a list of keys into trees
 (define (insert-list tree keys)
   (if (null? keys)
       tree
@@ -153,10 +183,12 @@
         ((< search-key (key tree)) (search (left tree) search-key))
         ((> search-key (key tree)) (search (right tree) search-key))
         ((= search-key (key tree)) tree)))
-;(print (car (insert-list nil tr)))
 
+;;Simple test tree
 (define test-tree '(5 (1 () (4 () () 1) 2) (8 (7 () () 1) (23 () () 1) 2) 3))
 
+;;Read from the tree-list
+;;0 stands for insert, 1 is delete and 2 is search
 (define (read-tree-list tree-list tree)
   (cond ((null? tree-list) tree)
         ((= 0 (car tree-list))
@@ -169,5 +201,6 @@
          (begin
            (search tree (cadr tree-list))
            (read-tree-list (cddr tree-list))))))
-
+;;Output the tree
 (print (read-tree-list tree-list nil))
+
