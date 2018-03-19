@@ -1,4 +1,6 @@
+;#lang racket
 ;;tree (key left-subtree right-subtree)
+(require racket/trace)
 ;;We use a top-down version implement which is recommended by the
 ;;original paper and have a slightly different result with the
 ;;bottom-up method.
@@ -49,6 +51,8 @@
             '()
             (cons x (proc (read in))))))))
 
+;(define out (open-output-file "splay-result.txt"))
+
 (define nil '())
 
 ;;The Key of tree
@@ -97,7 +101,7 @@
                   (list (key tree) (left tree) add-tree)
                   (list (key tree) (left tree) (add-to-right-most (right tree) add-tree))))))
 
-;;Left
+;;Leftpp
 (define (add-to-left-most tree add-tree)
   (cond ((null? tree) add-tree)
         ((null? add-tree) tree)
@@ -184,7 +188,7 @@
                       (top-down-splay (left (right tree))
                                       search-key
                                       (add-to-right-most left-tree
-                     p                                    (make-splay-left-tree tree))
+                                                         (make-splay-left-tree tree))
                                       (add-to-left-most right-tree
                                                         (make-splay-right-tree (right tree)))))
                      ;;Case 1
@@ -234,7 +238,7 @@
                 (right splaytree))))))
 
 (define (search tree search-key)
-  (splay tree search-key))
+  (top-down-splay tree search-key))
 
 (define (insert-list tree keys)
   (if (null? keys)
@@ -255,4 +259,4 @@
            (search tree (cadr tree-list))
            (read-tree-list (cddr tree-list))))))
 
-(print (read-tree-list tree-list nil))
+(display (read-tree-list tree-list nil))

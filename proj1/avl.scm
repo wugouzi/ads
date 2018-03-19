@@ -1,6 +1,8 @@
 ;#!/usr/bin/racket
 ;#lang racket
 ;;tree:: (key left-subtree right-subtree height)
+(require racket/trace)
+
 (define tree-list
   (call-with-input-file "avl-test.txt"
     (lambda (in)
@@ -141,7 +143,7 @@
      ;;No such key
      ((null? tree) tree)
      ;;The key is in left subtree
-p     ((< delete-key tree-key)
+     ((< delete-key tree-key)
       (if (null? (left tree))
           tree
           (let ((newtree (make-avl-tree tree-key
@@ -160,17 +162,14 @@ p     ((< delete-key tree-key)
             (avl-balance newtree))))
      ;;Find the key
      ((= delete-key tree-key)
-      (let
-          ;;Make the newtree
-          ((newtree (cond ((null? (left tree)) (right tree))
-                          ((null? (right tree)) (left tree))
-                          ;;The nodes have both right subtree and left subtree
-                          ;;So we need to find its inorder successor and take
-                          ;;the place of it
-                          (else (make-avl-tree (key (left-most (right tree)))
-                                               (left tree)
-                                               (delete-left-most (right tree)))))))
-        (avl-balance newtree))))))
+      (cond ((null? (left tree)) (right tree))
+            ((null? (right tree)) (left tree))
+            ;;The nodes have both right subtree and left subtree
+            ;;So we need to find its inorder successor and take
+            ;;the place of it
+            (else (make-avl-tree (key (left-most (right tree)))
+                                 (left tree)
+                                 (delete-left-most (right tree)))))))))
 
 ;;Insert a list of keys into trees
 (define (insert-list tree keys)
