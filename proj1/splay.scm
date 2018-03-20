@@ -229,16 +229,19 @@
   ;;First splay the tree
   (let ((splaytree (top-down-splay tree delete-key nil nil)))
     ;;Whether there is the expected key
-    (if (null? (left splaytree))
-        (right splaytree)
-        ;;Merge the left and right tree
-        (let ((newtree (top-down-splay (left splaytree) (key (right-most (left splaytree))) nil nil)))
-          (list (key newtree)
-                (left newtree)
-                (right splaytree))))))
+    (cond ((not (= delete-key (key splaytree))) splaytree)
+          ((null? (left splaytree)) (right splaytree))
+          (else
+           ;;Merge the left and right tree
+           (let ((newtree (top-down-splay (left splaytree)
+                                          (key (right-most (left splaytree)))
+                                          nil nil)))
+             (list (key newtree)
+                   (left newtree)
+                   (right splaytree)))))))
 
 (define (search tree search-key)
-  (top-down-splay tree search-key))
+  (top-down-splay tree search-key nil nil))
 
 (define (insert-list tree keys)
   (if (null? keys)
