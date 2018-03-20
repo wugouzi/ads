@@ -1,7 +1,7 @@
 (require racket/trace)
 
 (define tree-list
-  (call-with-input-file "bst-test.txt"
+  (call-with-input-file "testcase.txt"
     (lambda (in)
       (let proc ((x (read in)))
         (if (eof-object? x)
@@ -117,7 +117,10 @@
         ((= 2 (car tree-list))
          (begin
            (search tree (cadr tree-list))
-           (read-tree-list (cddr tree-list) tree)))))
-
-(print (read-tree-list tree-list nil))
-
+           (read-tree-list (cddr tree-list))))))
+(define (time_test start_time)
+  (print (read-tree-list tree-list nil))
+  (print (list (newline) "total run time: " (- (current-inexact-milliseconds) start_time) "milliseconds!")))
+  
+  
+(time_test (current-inexact-milliseconds))

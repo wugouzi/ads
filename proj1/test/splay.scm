@@ -44,7 +44,7 @@
 
 ;;Read input and make them a list
 (define tree-list
-  (call-with-input-file "splay-test.txt"
+  (call-with-input-file "testcase.txt"
     (lambda (in)
       (let proc ((x (read in)))
         (if (eof-object? x)
@@ -258,6 +258,14 @@
          (read-tree-list (cddr tree-list)
                          (delete tree (cadr tree-list))))
         ((= 2 (car tree-list))
-         (read-tree-list (cddr tree-list) (search tree (cadr tree-list))))))
+         (begin
+           (search tree (cadr tree-list))
+           (read-tree-list (cddr tree-list))))))
 
-(display (read-tree-list tree-list nil))
+
+         
+(define (time_test start_time)
+  (display (read-tree-list tree-list nil))
+  (print (list (newline) "total run time: " (- (current-inexact-milliseconds) start_time) "milliseconds!")))
+
+(time_test (current-inexact-milliseconds))

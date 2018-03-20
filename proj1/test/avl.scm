@@ -4,7 +4,7 @@
 (require racket/trace)
 
 (define tree-list
-  (call-with-input-file "avl-test.txt"
+  (call-with-input-file "testcase.txt"
     (lambda (in)
       (let proc ((x (read in)))
         (if (eof-object? x)
@@ -163,12 +163,12 @@
      ;;Find the key
      ((= delete-key tree-key)
       (cond ((null? (left tree)) (right tree))
-            ((null? (right tree)) (left tree))
-            ;;The nodes have both right subtree and left subtree
-            ;;So we need to find its inorder successor and take
-            ;;the place of it
-            (else (make-avl-tree (key (left-most (right tree)))
-                                 (left tree)
+                          ((null? (right tree)) (left tree))
+                          ;;The nodes have both right subtree and left subtree
+                          ;;So we need to find its inorder successor and take
+                          ;;the place of it
+                          (else (make-avl-tree (key (left-most (right tree)))
+                                               (left tree)
                                  (delete-left-most (right tree)))))))))
 
 ;;Insert a list of keys into trees
@@ -199,7 +199,13 @@
         ((= 2 (car tree-list))
          (begin
            (search tree (cadr tree-list))
-           (read-tree-list (cddr tree-list) tree)))))
-;;Output the tree
-(print (read-tree-list tree-list nil))
+           (read-tree-list (cddr tree-list))))))
 
+
+;;edited by the tester, intended to calculate the time it cost
+(define (time_test start_time)
+  (print (read-tree-list tree-list nil))
+  (print (list (newline) "total run time: " (- (current-inexact-milliseconds) start_time) "milliseconds!")))
+
+;;Output the tree and the time
+(time_test (current-inexact-milliseconds))
