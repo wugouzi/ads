@@ -62,11 +62,9 @@
 (define (delete-left-most tree)
   (cond ((null? tree) tree)
         ((null? (left tree))
-         (if (null? (right tree))
-             nil
-             (right tree)))
+         (right tree))
         (else (list (key tree)
-                    (delete-left-most tree)
+                    (delete-left-most (left tree))
                     (right tree)))))
 
 (define (delete tree delete-key)
